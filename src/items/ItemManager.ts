@@ -12,14 +12,10 @@ export class ItemManager {
     }
 
     getRandomItem(): Item {
-        const template = this.items[nextInt(this.items.length)];
-        // Copy so suffixes don't accumulate on the shared template.
-        const item = new Item(
-            template.getName(),
-            template.getBodyPart(),
-            template.getAttack(),
-            template.getDefense()
-        );
+        // Intentionally returns the shared template instance (not a copy): suffixes
+        // accumulate on it across spawns over time, which is funnier — items end up
+        // with several stacked suffixes. This matches the original Java behaviour.
+        const item = this.items[nextInt(this.items.length)];
 
         const suffixManager = new SuffixManager();
 
