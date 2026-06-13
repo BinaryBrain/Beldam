@@ -1,0 +1,24 @@
+node_modules
+dist
+.git
+.gitignore
+.idea
+*.iml
+
+# Java legacy build artifacts
+build
+out
+nbproject
+*.class
+*.jar
+libs
+
+# Large design docs not needed in the image
+*.pptx
+*.docx
+*.key
+
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
