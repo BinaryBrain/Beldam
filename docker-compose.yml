@@ -1,0 +1,9 @@
+services:
+  beldam:
+    build: .
+    image: beldam-server
+    container_name: beldam-server
+    ports:
+      - "23000:23000"
+    restart: unless-stopped
+    stop_grace_period: 5s
