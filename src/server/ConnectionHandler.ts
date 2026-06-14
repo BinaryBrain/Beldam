@@ -20,6 +20,12 @@ import { GameManager } from "./GameManager";
 import { TelnetSocket } from "./TelnetSocket";
 import { Command, commandFromString, Direction, directionFromString, PlayerState } from "./types";
 
+// Erase the whole display AND move the cursor home, so every frame is redrawn
+// from the top-left and overwrites the previous one in place. The cursor-home
+// is essential: without it frames were drawn from wherever the cursor sat (the
+// bottom), scrolling the old frame up into the terminal scrollback.
+const CLEAR_SCREEN = "\x1b[2J\x1b[H";
+
 export class ConnectionHandler {
     private readonly socket: TelnetSocket;
 
@@ -376,8 +382,6 @@ export class ConnectionHandler {
 
         this.mainScreen.update(this.player);
 
-        await this.clearScreen();
-
         let currentScreen: { toString(): string } = this.mainScreen;
 
         switch (this.state) {
@@ -390,7 +394,12 @@ export class ConnectionHandler {
                 break;
         }
 
-        await this.socket.write(currentScreen.toString());
+        // Emit the clear+home and the frame as a SINGLE write. Concurrent renders
+        // (e.g. a fight resolving via redrawParticipants() plus this loop's own
+        // printScreen()) are serialised on the socket's write queue; if the clear
+        // and the frame were separate writes they could interleave as
+        // [clear, clear, frameA, frameB] and stack the two frames on screen.
+        await this.socket.write(CLEAR_SCREEN + currentScreen.toString());
     }
 
     /**
@@ -413,7 +422,7 @@ export class ConnectionHandler {
     }
 
     private async clearScreen(): Promise<void> {
-        await this.socket.write("\x1b[2J");
+        await this.socket.write(CLEAR_SCREEN);
     }
 
     private cmd(command: string[]): string {
